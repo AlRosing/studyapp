@@ -5,19 +5,11 @@ import 'globals.dart' as globals;
 /*todo This is a overall to-do list
 Figure out overflow issue
 Do a default name
-//add editing features for the terms
+//add editing features for the terms - issue of clicking on a term to edit it only to make a new one
 Fix the text going invisible - does text disappear?
 Implement wrap-around for text in terms....
 Get a successful run
 Work on studying features
-Errors:
-//emulator disappears when click checkmark/enter -FIXED mostly
-//issues with duplicates happen once one term has been added -FIXED
-//opening a set causes it to save it as a separate one as well unless use StudyApp (home) button-FIXED
-//opening a term causes it save it twice as well....-FIXED
-//overall issue with editing -FIXED
-//need to click enter to save it
-//error with PixelFold?? need to update the debugger or smthing -FIXED
  */
 
 void main() {
