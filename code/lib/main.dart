@@ -1,15 +1,20 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'globals.dart' as globals;
 
 /*todo This is a overall to-do list
 Figure out overflow issue
-Do a default name
-//add editing features for the terms - issue of clicking on a term to edit it only to make a new one
-Fix the text going invisible - does text disappear?
-Implement wrap-around for text in terms....
+Add deleting items & sets.
+implement scrolling(ListView class might be useful for this)
 Get a successful run
 Work on studying features
+
+Changes:
+made it so that you can edit items (change them)
+checked & implemented text wrap-around for terms
+made it so that you can delete both items and sets
+changed a bit of the look - for the terms & for the done button(replaced with check mark)
  */
 
 void main() {
@@ -142,12 +147,11 @@ class _SetCreationPageState extends State<SetCreationPage> {
     QASet current = QASet();
     List<Widget> info = [
       Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
           const Text("Name:  "),
           //add text editor
-          SizedBox(
-            width: 160,
+          Flexible(
+            fit: FlexFit.tight,
             child: TextField(
               controller: TextEditingController(),
               decoration: const InputDecoration(
@@ -156,18 +160,22 @@ class _SetCreationPageState extends State<SetCreationPage> {
               ),
               onSubmitted: (String value) async {
                 current.setName(value);
-                globals.mySets.add(current);
               },
             ),
           ),
-          TextButton(
+          IconButton(
             onPressed: () {
               globals.mySets.add(current);
               Navigator.pushNamed(context, '/home');
             },
-            child: const Text("Done"),
+            icon: Icon(
+              Icons.check,
+              color: Colors.green[800],
+              size: 30,
+            ),
           )
         ],
+        mainAxisSize: MainAxisSize.min,
       ),
     ];
     return Scaffold(
@@ -189,7 +197,6 @@ class _SetCreationPageState extends State<SetCreationPage> {
         children: [
           Column(children: info),
           Column(children: current.displayItems(context)),
-          //is it displaying it twice????
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -223,6 +230,7 @@ class ViewSetPage extends StatefulWidget {
   _ViewSetPageState createState() => _ViewSetPageState(current);
 }
 
+//todo make it so that you can delete pairs
 class _ViewSetPageState extends State<ViewSetPage> {
   QASet? current;
   String? oldName;
@@ -235,9 +243,8 @@ class _ViewSetPageState extends State<ViewSetPage> {
   Widget build(BuildContext context) {
     List<Widget> info = [
       Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          Expanded(
+          Flexible(
             child: TextField(
               controller: TextEditingController(),
               decoration: InputDecoration(
@@ -249,19 +256,22 @@ class _ViewSetPageState extends State<ViewSetPage> {
                 globals.mySets.setSet(current!, globals.mySets.find(oldName));
               },
             ),
+            fit: FlexFit.loose,
           ),
-          TextButton(
+          IconButton(
             //issue here
+            icon: Icon(
+              Icons.check,
+              color: Colors.green[800],
+              size: 30,
+            ),
             onPressed: () {
-              globals.mySets.setSet(
-                  current!,
-                  globals.mySets.find(
-                      oldName)); //issue - need to check if current already there
+              globals.mySets.setSet(current!, globals.mySets.find(oldName));
               Navigator.pushNamed(context, '/home');
             },
-            child: const Text("X"),
           )
         ],
+        mainAxisSize: MainAxisSize.min,
       ),
     ];
     return Scaffold(
@@ -309,19 +319,21 @@ class _ViewSetPageState extends State<ViewSetPage> {
 
 class EditingItems extends StatefulWidget {
   final String? name;
+  final int? index;
 
-  const EditingItems({required this.name, super.key});
+  const EditingItems({required this.name, this.index, super.key});
 
   @override
-  _EditingItemsState createState() => _EditingItemsState(name);
+  _EditingItemsState createState() => _EditingItemsState(name, index);
 }
 
 class _EditingItemsState extends State<EditingItems> {
-  //todo move down the children in row
   String? name;
+  int? index;
 
-  _EditingItemsState(String? name) {
+  _EditingItemsState(String? name, int? i) {
     this.name = name;
+    index = i;
   }
 
   @override
@@ -330,12 +342,11 @@ class _EditingItemsState extends State<EditingItems> {
     int setI = globals.mySets.find(name);
     Item toAdd = Item();
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(5, 600, 0, 0),
+      body: Center(
         child: Row(
           children: [
             //add text editor
-            Expanded(
+            Flexible(
               child: TextField(
                 controller: TextEditingController(),
                 decoration: const InputDecoration(
@@ -349,9 +360,9 @@ class _EditingItemsState extends State<EditingItems> {
                   toAdd.setTerm(value);
                 },
               ),
+              fit: FlexFit.tight,
             ),
-            SizedBox(
-              width: 150,
+            Flexible(
               child: TextField(
                 controller: TextEditingController(),
                 decoration: const InputDecoration(
@@ -365,13 +376,18 @@ class _EditingItemsState extends State<EditingItems> {
                   toAdd.setAnswer(value);
                 },
               ),
+              fit: FlexFit.tight,
             ),
             TextButton(
               //issue here I think
               onPressed: () {
                 //print(globals.mySets.get(setI));
-                QASet thing = globals.mySets.get(setI);
-                thing.addItem(toAdd);
+                QASet thing = globals.mySets.get(setI)!;
+                if (index == null) {
+                  thing.addItem(toAdd);
+                } else {
+                  thing.setItem(index!, toAdd);
+                }
                 globals.mySets.setSet(thing, setI);
                 //.addItemToSet(toAdd, setI); //problem might be here
                 //print(globals.mySets.get(setI));
@@ -387,6 +403,7 @@ class _EditingItemsState extends State<EditingItems> {
               child: const Text("Done"),
             ),
           ],
+          mainAxisSize: MainAxisSize.min,
         ),
       ),
     );
@@ -454,22 +471,42 @@ class Sets {
   List<Widget> displaySets(BuildContext context) {
     List<Widget> setsToDisplay = <Widget>[];
     for (int i = 0; i < sets.length; i++) {
-      setsToDisplay.add(TextButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ViewSetPage(
-                      current: get(i),
-                    )),
-          );
-        },
-        child: Text(
-          sets[i].getName(),
-          softWrap: true,
-          overflow: TextOverflow.ellipsis,
+      //todo put list in center
+      setsToDisplay.add(
+        Row(
+          children: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ViewSetPage(
+                            current: get(i),
+                          )),
+                );
+              },
+              child: Text(
+                sets[i].getName(),
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                print(globals.mySets);
+                globals.mySets.deleteSet(i);
+                print(globals.mySets);
+                Navigator.pushNamed(context, '/home');
+              },
+              icon: Icon(
+                CupertinoIcons.trash,
+                size: 15,
+                color: Colors.red,
+              ),
+            ),
+          ],
         ),
-      ));
+      );
     }
     print(sets.toString());
     return setsToDisplay;
@@ -482,8 +519,12 @@ class Sets {
     return -1;
   }
 
-  QASet get(int index) {
-    return sets[index];
+  QASet? get(int index) {
+    if (index > -1 && index < sets.length)
+      return sets[index];
+    else {
+      return null;
+    }
   }
 
   void add(QASet set) {
@@ -491,7 +532,7 @@ class Sets {
   }
 
   void deleteSet(int index) {
-    if (index > 0 && index < sets.length) sets.remove(index);
+    if (index > -1 && index < sets.length) sets.removeAt(index);
   }
 
   void setSet(QASet set, int index) {
@@ -543,27 +584,49 @@ class QASet {
           dos +
           "'\nEnd of loop");
       itemsToDisplay.add(
-        TextButton(
+        ElevatedButton(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              Expanded(
+              Flexible(
                 child: Text(
                   uno,
                   softWrap: true,
                 ),
+                fit: FlexFit.tight,
               ),
-              Expanded(
-                  child: Text(
-                dos,
-                softWrap: true,
-              )),
+              Spacer(),
+              Flexible(
+                child: Text(
+                  dos,
+                  softWrap: true,
+                ),
+                fit: FlexFit.tight,
+              ),
+              IconButton(
+                onPressed: () {
+                  this.deleteItem(i);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewSetPage(
+                        current: this,
+                      ),
+                    ),
+                  );
+                },
+                icon: Icon(
+                  CupertinoIcons.trash,
+                  size: 15,
+                  color: Colors.red,
+                ),
+              ),
             ],
           ),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => EditingItems(name: name)),
+              MaterialPageRoute(
+                  builder: (context) => EditingItems(name: name, index: i)),
             );
           },
         ),
@@ -623,6 +686,10 @@ class QASet {
 
   void addItem(Item thing) {
     items.add(thing);
+  }
+
+  void deleteItem(int index) {
+    if (index > -1 && index < items.length) items.removeAt(index);
   }
 
   @override
