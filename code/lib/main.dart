@@ -4,17 +4,11 @@ import 'package:flutter/material.dart';
 import 'globals.dart' as globals;
 
 /*todo This is a overall to-do list
-Figure out overflow issue
-Add deleting items & sets.
-implement scrolling(ListView class might be useful for this)
 Get a successful run
 Work on studying features
-
+Change look of terms as buttons - becomes too circular the longer the text gets
 Changes:
-made it so that you can edit items (change them)
-checked & implemented text wrap-around for terms
-made it so that you can delete both items and sets
-changed a bit of the look - for the terms & for the done button(replaced with check mark)
+Added scrolling
  */
 
 void main() {
@@ -70,50 +64,53 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-        child: Column(
-          children: <Widget>[
-            Container(
-              child: const Text("Welcome Back\n\n"),
-            ),
-            Column(
-              children: <Widget>[
-                const Text("Create Set"),
-                Column(
-                  children: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/SetCreation');
-                      },
-                      child: const Text("Q&A"),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Scaffold(
-                              body: Center(
-                                child: Text(
-                                  "Not implemented yet, sorry!\nPress the escape key to return.",
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Container(
+                child: const Text("Welcome Back\n\n"),
+              ),
+              Column(
+                children: <Widget>[
+                  const Text("Create Set"),
+                  Column(
+                    children: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/SetCreation');
+                        },
+                        child: const Text("Q&A"),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Scaffold(
+                                body: Center(
+                                  child: Text(
+                                    "Not implemented yet, sorry!\nPress the escape key to return.",
+                                  ),
                                 ),
                               ),
+                              barrierDismissible: true,
+                              fullscreenDialog: false,
                             ),
-                            barrierDismissible: true,
-                            fullscreenDialog: false,
-                          ),
-                        );
-                      },
-                      child: const Text("Visual Drag&Drop"),
-                    ),
-                  ],
-                ),
-                const Text("Recent"),
-                Column(
-                  children: globals.mySets.displaySets(context),
-                ),
-              ],
-            ),
-          ],
+                          );
+                        },
+                        child: const Text("Visual Drag&Drop"),
+                      ),
+                    ],
+                  ),
+                  const Text("Recent"),
+                  Column(
+                    children: globals.mySets.displaySets(context),
+                  ),
+                ],
+              ),
+            ],
+            mainAxisSize: MainAxisSize.min,
+          ),
         ),
       ),
     );
@@ -145,6 +142,7 @@ class _SetCreationPageState extends State<SetCreationPage> {
   @override
   Widget build(BuildContext context) {
     QASet current = QASet();
+    bool added = false;
     List<Widget> info = [
       Row(
         children: <Widget>[
@@ -160,12 +158,14 @@ class _SetCreationPageState extends State<SetCreationPage> {
               ),
               onSubmitted: (String value) async {
                 current.setName(value);
+                globals.mySets.add(current);
+                added = true;
               },
             ),
           ),
           IconButton(
             onPressed: () {
-              globals.mySets.add(current);
+              if (added == false) globals.mySets.add(current);
               Navigator.pushNamed(context, '/home');
             },
             icon: Icon(
@@ -193,29 +193,30 @@ class _SetCreationPageState extends State<SetCreationPage> {
               child: const Text('StudyApp')),
         ],
       ),
-      body: Column(
-        children: [
-          Column(children: info),
-          Column(children: current.displayItems(context)),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        EditingItems(name: current.getName())),
-              );
-            },
-            child: const Text(
-              '+',
-              style: TextStyle(
-                fontSize: 30,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Column(children: info),
+            Column(children: current.displayItems(context)),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          EditingItems(name: current.getName())),
+                );
+              },
+              child: const Text(
+                '+',
+                style: TextStyle(
+                  fontSize: 30,
+                ),
               ),
             ),
-          ),
-          //name stuff
-          //terms
-        ],
+          ],
+          mainAxisSize: MainAxisSize.min,
+        ),
       ),
     );
   }
@@ -289,34 +290,38 @@ class _ViewSetPageState extends State<ViewSetPage> {
               child: const Text('StudyApp')),
         ],
       ),
-      body: Column(
-        children: [
-          Column(children: info),
-          Column(children: current!.displayItems(context)),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        EditingItems(name: current!.getName())),
-              );
-            },
-            child: const Text(
-              '+',
-              style: TextStyle(
-                fontSize: 30,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Column(children: info),
+            Column(children: current!.displayItems(context)),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          EditingItems(name: current!.getName())),
+                );
+              },
+              child: const Text(
+                '+',
+                style: TextStyle(
+                  fontSize: 30,
+                ),
               ),
             ),
-          ),
-          //name stuff
-          //terms
-        ],
+            //name stuff
+            //terms
+          ],
+          mainAxisSize: MainAxisSize.min,
+        ),
       ),
     );
   }
 }
 
+//reasonably shouldn't need any scrolling here.....
 class EditingItems extends StatefulWidget {
   final String? name;
   final int? index;
@@ -338,7 +343,9 @@ class _EditingItemsState extends State<EditingItems> {
 
   @override
   Widget build(BuildContext context) {
+    //todo cleanup this code of testing stuff if fix works
     //needs to get name or some sort of identifier as to what set it is
+    print(name);
     int setI = globals.mySets.find(name);
     Item toAdd = Item();
     return Scaffold(
@@ -381,8 +388,9 @@ class _EditingItemsState extends State<EditingItems> {
             TextButton(
               //issue here I think
               onPressed: () {
-                //print(globals.mySets.get(setI));
-                QASet thing = globals.mySets.get(setI)!;
+                print(setI);
+                print(globals.mySets.get(setI));
+                QASet thing = globals.mySets.get(setI)!; //returning null
                 if (index == null) {
                   thing.addItem(toAdd);
                 } else {
@@ -407,58 +415,8 @@ class _EditingItemsState extends State<EditingItems> {
         ),
       ),
     );
-    /*IconButton(
-    //adds stuff each time it is pressed
-    //should only show when the mouse is hovering over it
-      onPressed: () {
-      },
-      //Icon:
-    ),*/
   }
 }
-
-//textediting
-/*class InputText extends StatefulWidget {
-  const InputText({super.key});
-
-  @override
-  State<InputText> createState() => _InputTextState();
-}
-
-class _InputTextState extends State<InputText> {
-  late TextEditingController _controller;
-  late String text;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  String getText() {
-    return this.text;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(),
-        hintText: 'Enter text here',
-      ),
-      onSubmitted: (String value) async {
-        text = value;
-      },
-    );
-  }
-}*/
 
 //IMPORTANT Information holding
 class Sets {
