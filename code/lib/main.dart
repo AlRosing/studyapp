@@ -41,8 +41,6 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
-  //Sets mySets = Sets();
-
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -86,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Scaffold(
+                              builder: (context) => const Scaffold(
                                 body: Center(
                                   child: Text(
                                     "Not implemented yet, sorry!\nPress the escape key to return.",
@@ -104,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   const Text("Recent"),
                   Column(
-                    children: globals.mySets.displaySets(context),
+                    children: globals.user.mySets.displaySets(context),
                   ),
                 ],
               ),
@@ -123,31 +121,32 @@ class SetCreationPage extends StatefulWidget {
   const SetCreationPage({super.key, this.setI});
 
   @override
-  _SetCreationPageState createState() => _SetCreationPageState(this.setI);
+  _SetCreationPageState createState() => _SetCreationPageState(setI);
 }
 
 class _SetCreationPageState extends State<SetCreationPage> {
   int? setI;
 
   _SetCreationPageState(int? i) {
-    this.setI = i;
+    setI = i;
   }
 
   @override
   Widget build(BuildContext context) {
     QASet current;
     bool added;
-    int i = globals.mySets.length();
+    int i = globals.user.mySets.length();
     String hint;
     if (setI == null) {
       current = QASet();
       added = false;
       hint = "Enter name here";
     } else {
-      if (globals.mySets.get(setI!) == null)
+      if (globals.user.mySets.get(setI!) == null) {
         current = QASet();
-      else
-        current = globals.mySets.get(setI!)!;
+      } else {
+        current = globals.user.mySets.get(setI!)!;
+      }
       added = true;
       hint = current.getName();
     }
@@ -167,11 +166,11 @@ class _SetCreationPageState extends State<SetCreationPage> {
               onSubmitted: (String value) async {
                 current.setName(value);
                 if (added == false) {
-                  globals.mySets.add(current);
+                  globals.user.add(current);
                   added = true;
                   setI = i;
                 } else {
-                  globals.mySets.setSet(current, setI!);
+                  globals.user.mySets.setSet(current, setI!);
                 }
               },
             ),
@@ -179,10 +178,10 @@ class _SetCreationPageState extends State<SetCreationPage> {
           IconButton(
             onPressed: () {
               if (added == false) {
-                globals.mySets.add(current);
+                globals.user.mySets.add(current);
                 setI = i;
               } else {
-                globals.mySets.setSet(current, setI!);
+                globals.user.mySets.setSet(current, setI!);
               }
               Navigator.push(
                 context,
@@ -213,7 +212,7 @@ class _SetCreationPageState extends State<SetCreationPage> {
             onPressed: () {
               Navigator.pushNamed(context, '/home');
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.home,
               color: Colors.black,
               size: 20,
@@ -229,7 +228,7 @@ class _SetCreationPageState extends State<SetCreationPage> {
             ElevatedButton(
               onPressed: () {
                 if (setI == null) {
-                  setI = globals.mySets.find(current.getName());
+                  setI = globals.user.mySets.find(current.getName());
                 }
                 Navigator.push(
                   context,
@@ -268,8 +267,8 @@ class _ViewSetPageState extends State<ViewSetPage> {
 
   @override
   Widget build(BuildContext context) {
-    print("ViewSetPage");
-    QASet current = globals.mySets.get(setI)!;
+    //print("ViewSetPage");
+    QASet current = globals.user.mySets.get(setI)!;
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
@@ -282,7 +281,7 @@ class _ViewSetPageState extends State<ViewSetPage> {
             onPressed: () {
               Navigator.pushNamed(context, '/home');
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.home,
               color: Colors.black,
               size: 20,
@@ -292,6 +291,7 @@ class _ViewSetPageState extends State<ViewSetPage> {
       ),
       body: SingleChildScrollView(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               "\n${current.getName()}",
@@ -343,11 +343,10 @@ class _ViewSetPageState extends State<ViewSetPage> {
               ],
             ),
             Column(
-              children: current.displayItems(context),
               mainAxisSize: MainAxisSize.min,
+              children: current.displayItems(context),
             ),
           ],
-          mainAxisSize: MainAxisSize.min,
         ),
       ),
     );
@@ -435,16 +434,16 @@ class _EditingItemsState extends State<EditingItems> {
               //issue here I think
               onPressed: () {
                 //print(setI);
-                //print(globals.mySets.get(setI));
-                QASet thing = globals.mySets.get(setI)!; //returning null
+                //print(globals.user.mySets.get(setI));
+                QASet thing = globals.user.mySets.get(setI)!; //returning null
                 if (index == null) {
                   thing.addItem(toAdd);
                 } else {
                   thing.setItem(index!, toAdd);
                 }
-                globals.mySets.setSet(thing, setI);
+                globals.user.mySets.setSet(thing, setI);
                 //.addItemToSet(toAdd, setI); //problem might be here
-                //print(globals.mySets.get(setI));
+                //print(globals.user.mySets.get(setI));
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -610,13 +609,13 @@ class _QAStudyPageState extends State<QAStudyPage> {
       {required this.setI, required this.begin, required this.ending});
 
   int randomItem() {
-    int len = globals.mySets.get(setI)!.getLength();
+    int len = globals.user.mySets.get(setI)!.getLength();
     final random = Random();
     return random.nextInt(len);
   } //for later
 
   Widget response(BuildContext context, i) {
-    String q = begin + globals.mySets.get(setI)!.getTerm(i) + ending;
+    String q = begin + globals.user.mySets.get(setI)!.getTerm(i) + ending;
     String response = "";
     return Scaffold(
       body: Center(
@@ -653,7 +652,7 @@ class _QAStudyPageState extends State<QAStudyPage> {
                       if (i > 0)
                         nextI = i - 1;
                       else
-                        nextI = globals.mySets.get(setI)!.getLength() - 1;
+                        nextI = globals.user.mySets.get(setI)!.getLength() - 1;
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -714,7 +713,8 @@ class _QAStudyPageState extends State<QAStudyPage> {
                     ),
                     onPressed: () {
                       int nextI;
-                      int longest = globals.mySets.get(setI)!.getLength() - 1;
+                      int longest =
+                          globals.user.mySets.get(setI)!.getLength() - 1;
                       if (i < longest) {
                         nextI = i + 1;
                       } else
@@ -741,8 +741,8 @@ class _QAStudyPageState extends State<QAStudyPage> {
   }
 
   Widget answer(BuildContext context, String response, int i) {
-    String answer = globals.mySets.get(setI)!.getAnswer(i);
-    String q = begin + globals.mySets.get(setI)!.getTerm(i) + ending;
+    String answer = globals.user.mySets.get(setI)!.getAnswer(i);
+    String q = begin + globals.user.mySets.get(setI)!.getTerm(i) + ending;
     return Scaffold(
       body: Center(
         child: Container(
@@ -774,7 +774,8 @@ class _QAStudyPageState extends State<QAStudyPage> {
                         if (i > 0)
                           nextI = i - 1;
                         else
-                          nextI = globals.mySets.get(setI)!.getLength() - 1;
+                          nextI =
+                              globals.user.mySets.get(setI)!.getLength() - 1;
                         Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -811,7 +812,8 @@ class _QAStudyPageState extends State<QAStudyPage> {
                       ),
                       onPressed: () {
                         int nextI;
-                        if (i < globals.mySets.get(setI)!.getLength() - 1) {
+                        if (i <
+                            globals.user.mySets.get(setI)!.getLength() - 1) {
                           nextI = i + 1;
                         } else
                           nextI = 0;
@@ -848,11 +850,269 @@ class _QAStudyPageState extends State<QAStudyPage> {
 }
 
 //IMPORTANT Information holding
-class Sets {
-  late List<QASet> sets;
+class UserData {
+  late Folder general;
 
-  Sets() {
-    sets = [];
+  //todo add categories & friends, etc
+  String user = "";
+  String password = "";
+  Sets mySets = Sets();
+
+  UserData(
+      {String? u, String? pass, Sets? sets, List<Folder>? folders = const []}) {
+    user = u ?? "Guest";
+    password = pass ?? "password";
+    mySets = sets ?? globals.sampleData;
+    List<int> numbers = [];
+    for (int i = 0; i < mySets.length(); i++) numbers.add(i);
+    general = Folder(n: "General", nums: numbers, folders: folders);
+  }
+
+  void setUser(String str) {
+    user = str;
+  }
+
+  void setPassword(String pass) {
+    password = pass;
+  }
+
+  Folder getGeneral() {
+    return general;
+  }
+
+  String getUser() => this.user;
+
+  String getPassword() => this.password;
+
+  void deleteSet(int i) {
+    if (this.mySets.length() > i && i > -1) {
+      this.mySets.deleteSet(i);
+    }
+    this.general.removeBuriedSet(i);
+  }
+
+  void add(QASet set) {
+    this.general.setNums.add(this.mySets.length());
+    this.mySets.add(set);
+  }
+
+  Widget display(BuildContext context) {
+    List<Widget> insideStuff = [];
+    for (int i in this.general.setNums) {
+      insideStuff.add(globals.user.mySets.displaySet(context, i));
+    }
+    for (Folder fold in this.general.foldersInside) {
+      insideStuff.add(fold.display(context: context));
+    }
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      children: insideStuff,
+      scrollDirection: Axis.vertical,
+    );
+  }
+}
+
+class Folder {
+  //will need basic Generic folder
+  late String name;
+  late Folder? folder;
+  late List<Folder> foldersInside;
+  late List<int> setNums;
+
+  //creation
+  Folder(
+      {String n = "Untitled",
+      Folder? fold,
+      List<int>? nums,
+      List<Folder>? folders}) {
+    name = n;
+    if (this.name == "General") {
+      this.folder = null;
+    } else {
+      if (fold == null)
+        this.setFolder(globals.user.getGeneral());
+      else
+        this.setFolder(fold);
+    }
+    setNums = nums ?? [];
+    foldersInside = folders ?? [];
+  }
+
+  //setting
+  void setName(String str) {
+    this.name = str;
+  }
+
+  void setFolder(Folder fold) {
+    this.folder = fold;
+    fold.addFolder(this);
+  }
+
+  void setFolders(List<Folder> folds) {
+    foldersInside = folds;
+  }
+
+  void moveFolder(Folder from, Folder to) {
+    from.removeFolder(this);
+    this.setFolder(to);
+  }
+
+  void moveSet(int i, Folder to) {
+    this.removeSet(i);
+    to.addSet(i);
+  }
+
+  void removeFolder(Folder folder) {
+    this.foldersInside.remove(folder);
+  }
+
+  void removeBuriedFolder(Folder folder) {
+    if (this.foldersInside.contains(folder)) {
+      foldersInside.remove(folder);
+    } else {
+      for (int j = 0; j < this.foldersInside.length; j++) {
+        this.foldersInside[j].removeBuriedFolder(folder);
+      }
+    }
+  }
+
+  void removeSet(int i) {
+    setNums.remove(i);
+  }
+
+  void removeBuriedSet(int i) {
+    if (setNums.contains(i)) {
+      setNums.remove(i);
+    } else {
+      for (int j = 0; j < this.foldersInside.length; j++) {
+        this.foldersInside[j].removeBuriedSet(i);
+      }
+    }
+  }
+
+  void addFolder(Folder folder) {
+    this.foldersInside.add(folder);
+  }
+
+  void addSet(int i) {
+    if (setNums.contains(i) == -1) setNums.add(i);
+  }
+
+  //getting
+  String getName() => this.name;
+
+  Folder? getFolder() => this.folder;
+
+  List<int> getSetNums() => this.setNums;
+
+  List<QASet> getSets() {
+    List<QASet> sets = [];
+    for (int i = 0; i < setNums.length; i++) {
+      sets.add(globals.user.mySets.sets[i]);
+    }
+    return sets;
+  }
+
+  Widget display({required BuildContext context, bool open = false}) {
+    if (!open)
+      return this.displayClosed(context);
+    else {
+      return this.displayOpen(context);
+    }
+  }
+
+  Widget displayClosed(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Icon(Icons.folder, size: 20, color: Colors.white),
+        Text(this.name),
+        IconButton(
+            icon: Icon(
+              Icons.arrow_drop_down,
+              size: 20,
+            ),
+            onPressed: () {
+              this.display(context: context, open: true);
+            }),
+      ],
+    );
+  }
+
+  Widget displayOpen(BuildContext context) {
+    List<Widget> insideStuff = [];
+    for (int i in this.setNums) {
+      insideStuff.add(globals.user.mySets.displaySet(context, i));
+    }
+    for (Folder fold in this.foldersInside) {
+      insideStuff.add(fold.display(context: context));
+    }
+    return Column(
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Icon(Icons.folder, size: 20, color: Colors.white),
+            Text(this.name),
+            IconButton(
+                icon: Icon(
+                  Icons.arrow_drop_up,
+                  size: 20,
+                ),
+                onPressed: () {
+                  this.display(context: context, open: false);
+                }),
+          ],
+        ),
+        Container(
+          padding: EdgeInsets.fromLTRB(50, 10, 10, 10),
+          color: null,
+          child: Column(
+            children: insideStuff,
+            mainAxisSize: MainAxisSize.min,
+          ),
+        )
+      ],
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+}
+
+class Sets {
+  List<QASet> sets = [];
+
+  Sets({List<QASet>? stuff}) {
+    sets = stuff ?? [];
+  }
+
+  Row displaySet(BuildContext context, int i) {
+    return Row(
+      children: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => ViewSetPage(setI: i)));
+          },
+          child: Text(
+            sets[i].getName(),
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        IconButton(
+          onPressed: () {
+            print(globals.user.mySets);
+            globals.user.deleteSet(i);
+            print(globals.user.mySets);
+            Navigator.pushNamed(context, '/home');
+          },
+          icon: Icon(
+            CupertinoIcons.trash,
+            size: 15,
+            color: Colors.red,
+          ),
+        ),
+      ],
+    );
   }
 
   //todo get rid of testing stuff
@@ -860,38 +1120,7 @@ class Sets {
     List<Widget> setsToDisplay = <Widget>[];
     for (int i = 0; i < sets.length; i++) {
       //todo put list in center
-      setsToDisplay.add(
-        Row(
-          children: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ViewSetPage(setI: i)));
-              },
-              child: Text(
-                sets[i].getName(),
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                print(globals.mySets);
-                globals.mySets.deleteSet(i);
-                print(globals.mySets);
-                Navigator.pushNamed(context, '/home');
-              },
-              icon: Icon(
-                CupertinoIcons.trash,
-                size: 15,
-                color: Colors.red,
-              ),
-            ),
-          ],
-        ),
-      );
+      setsToDisplay.add(this.displaySet(context, i));
     }
     print(sets.toString());
     return setsToDisplay;
@@ -921,7 +1150,13 @@ class Sets {
   }
 
   void deleteSet(int index) {
-    if (index > -1 && index < sets.length) sets.removeAt(index);
+    if (index > -1 && index < sets.length) {
+      sets.removeAt(index);
+    }
+  }
+
+  void removeSet(QASet set) {
+    sets.remove(set);
   }
 
   void setSet(QASet set, int index) {
@@ -948,13 +1183,17 @@ class Sets {
 }
 
 class QASet {
-  late String name;
-  late List<Item> items;
+  String name = "Unnamed";
+  List<Item> items = [];
 
-  QASet() {
-    name = "Unnamed";
-    Item thing = Item();
-    items = [thing];
+  QASet({String n = "Unnamed", List<Item>? items}) {
+    name = n;
+    if (items == null) {
+      Item thing = Item();
+      this.items = [thing];
+    } else {
+      this.items = items;
+    }
   }
 
   List<Widget> displayItems(BuildContext context) {
@@ -1042,7 +1281,7 @@ class QASet {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ViewSetPage(
-                        setI: globals.mySets.find(this.getName()),
+                        setI: globals.user.mySets.find(this.getName()),
                       ),
                     ),
                   );
@@ -1059,8 +1298,8 @@ class QASet {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) =>
-                      EditingItems(setI: globals.mySets.find(name), index: i)),
+                  builder: (context) => EditingItems(
+                      setI: globals.user.mySets.find(name), index: i)),
             );
           },
         ),
@@ -1144,9 +1383,9 @@ class Item {
   late String term;
   late String answer;
 
-  Item() {
-    term = "term";
-    answer = "answer";
+  Item({String t = "term", String a = "answer"}) {
+    term = t;
+    answer = a;
   }
 
   void setTerm(String str) {
