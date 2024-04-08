@@ -345,3 +345,5 @@ QASet three = QASet(
 Sets sampleData = Sets(stuff: <QASet>[one, two, three]);
 
 UserData user = UserData(sets: sampleData);
+
+void main() {}
