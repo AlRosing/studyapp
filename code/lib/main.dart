@@ -185,7 +185,6 @@ class ChoosingSetType extends StatelessWidget {
       children: [
         TextButton(
           onPressed: () {
-            //todo will go to create term set page
             Navigator.pushNamed(context, '/newSet');
           },
           child: Container(
@@ -199,7 +198,7 @@ class ChoosingSetType extends StatelessWidget {
             width: MediaQuery.of(context).size.width - 20.0,
             child: const Center(
               child: Text(
-                "Term Set",
+                "Flashcard Set",
                 style: TextStyle(
                   color: Colors.black,
                 ),
@@ -220,7 +219,28 @@ class ChoosingSetType extends StatelessWidget {
             width: MediaQuery.of(context).size.width - 20.0,
             child: const Center(
               child: Text(
-                "Drag & Drop Set",
+                "Visual Drag & Drop Set",
+                style: TextStyle(
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: () {},
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.black,
+              ),
+              color: Colors.grey[400],
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            width: MediaQuery.of(context).size.width - 20.0,
+            child: const Center(
+              child: Text(
+                "Q & A Set",
                 style: TextStyle(
                   color: Colors.black,
                 ),
@@ -517,7 +537,7 @@ class _SetCreationPageState extends State<SetCreationPage> {
           ),
           SizedBox(
             width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height - 350.0,
+            height: MediaQuery.of(context).size.height - 377.0,
             child: SingleChildScrollView(
               child: stuff,
             ),
@@ -635,7 +655,11 @@ class _EditingItemsState extends State<EditingItems> {
               ),
               IconButton.outlined(
                 onPressed: () {
-                  globals.user.mySets.addItemToSet(toAdd, setI);
+                  if (index != null) {
+                    globals.user.mySets.setItemInSet(toAdd, setI, index!);
+                  } else {
+                    globals.user.mySets.addItemToSet(toAdd, setI);
+                  }
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -717,6 +741,9 @@ class _BasicPageFormatState extends State<BasicPageFormat> {
             child: info,
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: globals.user.display(context),
       ),
     );
   }
@@ -846,6 +873,9 @@ class _ViewSetPageState extends State<ViewSetPage> {
             ),
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: globals.user.display(context),
       ),
     );
   }
@@ -1205,9 +1235,9 @@ class UserData {
 
   void deleteSet(int i) {
     if (mySets.length() > i && i > -1) {
+      general.deletingSet(i);
       mySets.deleteSet(i);
     }
-    general.removeBuriedSet(i);
   }
 
   void add(QASet set) {
@@ -1282,6 +1312,20 @@ class Folder {
   void removeAllSetsOfThisFromOuter() {
     for (int i in setNums) {
       removeSetFromOuterFolders(i);
+    }
+  }
+
+  void deletingSet(int i) {
+    for (int j = 0; j < setNums.length; j++) {
+      if (setNums[j] > i) {
+        setNums[j] = setNums[j] - 1;
+      } else if (setNums[j] == i) {
+        setNums.removeAt(j);
+        j--;
+      }
+    }
+    for (int j = 0; j < foldersInside.length; j++) {
+      foldersInside[j].deletingSet(i);
     }
   }
 
@@ -1450,39 +1494,42 @@ class Sets {
   }
 
   Container displaySetShortened(BuildContext context, int i) {
-    return Container(
-      child: Row(
-        children: <Widget>[
-          SizedBox(
-            width: 190.0,
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ViewSetPage(setI: i)));
-              },
-              child: Text(
-                sets[i].getName(),
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
+    if (i < sets.length && i > -1) {
+      return Container(
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 190.0,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ViewSetPage(setI: i)));
+                },
+                child: Text(
+                  sets[i].getName(),
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              globals.user.deleteSet(i);
-              Navigator.pushNamed(context, '/home');
-            },
-            icon: const Icon(
-              CupertinoIcons.trash,
-              size: 15,
-              color: Colors.red,
+            IconButton(
+              onPressed: () {
+                globals.user.mySets.deleteSet(i);
+                Navigator.pushNamed(context, '/home');
+              },
+              icon: const Icon(
+                CupertinoIcons.trash,
+                size: 15,
+                color: Colors.red,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    } else
+      return Container(child: null);
   }
 
   //todo get rid of testing stuff
@@ -1519,8 +1566,13 @@ class Sets {
   }
 
   void deleteSet(int index) {
+    print("Set Length: ${sets.length}");
+    print(index);
     if (index > -1 && index < sets.length) {
-      sets.removeAt(index);
+      if (index != sets.length - 1)
+        sets.removeAt(index);
+      else
+        sets.removeLast();
     }
   }
 
@@ -1534,6 +1586,10 @@ class Sets {
 
   void addItemToSet(Item thing, int index) {
     sets[index].addItem(thing);
+  }
+
+  void setItemInSet(Item thing, int index, int termIndex) {
+    sets[index].setItem(termIndex, thing);
   }
 
   @override
@@ -1679,7 +1735,7 @@ class QASet {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ViewSetPage(
+                        builder: (context) => SetCreationPage(
                           setI: globals.user.mySets.find(getName()),
                         ),
                       ),
